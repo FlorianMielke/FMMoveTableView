@@ -42,6 +42,29 @@
 
 
 
+/**
+ * We need a little helper to cancel the current touch of the long press gesture recognizer
+ * in the case the user does not tap on a row but on a section or table header
+ */
+
+@interface UIGestureRecognizer (FMUtilities)
+
+- (void)cancelTouch;
+
+@end
+
+
+@implementation UIGestureRecognizer (FMUtilities)
+
+- (void)cancelTouch
+{
+	[self setEnabled:NO];
+	[self setEnabled:YES];
+}
+
+@end
+
+
 
 @interface FMMoveTableView ()
 
@@ -175,6 +198,13 @@
 			
 			// Grap the touched index path
 			NSIndexPath *touchedIndexPath = [self indexPathForRowAtPoint:touchPoint];
+			
+			// Check for a valid index path, otherwise cancel the touch
+			if (!touchedIndexPath || [touchedIndexPath section] == NSNotFound || [touchedIndexPath row] == NSNotFound) {
+				[gestureRecognizer cancelTouch];
+				break;
+			}
+			
 			[self setMovingIndexPath:touchedIndexPath];
 			
 			// Get the touched cell and reset it's selection state
@@ -208,7 +238,7 @@
 			
 			[self setSnapShotImageView:snapShotOfMovingCell];
 			[self addSubview:[self snapShotImageView]];
-
+			
 			
 			// Prepare the cell for moving (e.g. clear it's labels and imageView)
 			[touchedCell prepareForMove];
@@ -243,9 +273,8 @@
 			
 			break;
 		}
-		
+			
 		case UIGestureRecognizerStateEnded:
-		case UIGestureRecognizerStateCancelled:
 		{
 			[self stopAutoscrolling];
 			
@@ -280,8 +309,22 @@
 		}
 			
 		default:
-			[self stopAutoscrolling];
+		{
+			// Do some cleanup if necessary
+			if ([self movingIndexPath]) 
+			{
+				[self stopAutoscrolling];
+				
+				[[self snapShotImageView] removeFromSuperview];
+				[self setSnapShotImageView:nil];
+				
+				NSIndexPath *movingIndexPath = [self movingIndexPath];
+				[self setMovingIndexPath:nil];
+				[self reloadRowsAtIndexPaths:[NSArray arrayWithObject:movingIndexPath] withRowAnimation:UITableViewRowAnimationNone];
+			}
+			
 			break;
+		}
 	}
 }
 
