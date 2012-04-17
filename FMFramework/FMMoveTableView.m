@@ -68,6 +68,7 @@
 
 @interface FMMoveTableView ()
 
+@property (nonatomic, strong) NSIndexPath *initialIndexPath;
 @property (nonatomic, assign) CGPoint touchOffset;
 @property (nonatomic, strong) FMSnapShotImageView *snapShotImageView;
 @property (nonatomic, strong) UILongPressGestureRecognizer *movingGestureRecognizer;
@@ -101,6 +102,7 @@
 
 @dynamic dataSource;
 @dynamic delegate;
+@synthesize initialIndexPath = _initialIndexPath;
 @synthesize movingIndexPath = _movingIndexPath;
 @synthesize touchOffset = _touchOffset;
 @synthesize snapShotImageView = _snapShotImageView;
@@ -160,22 +162,25 @@
 	// Analyze the new moving index path
 	// 1. It's a valid index path
 	// 2. It's not the current index path of the cell
-	// 3. The delegate allows moving to the new index path
 	if ([newIndexPath section] != NSNotFound && [newIndexPath row] != NSNotFound 
 		&& [newIndexPath compare:[self movingIndexPath]] != NSOrderedSame
-		&& newIndexPath == [[self delegate] moveTableView:self targetIndexPathForMoveFromRowAtIndexPath:[self movingIndexPath] toProposedIndexPath:newIndexPath]
 		) 
 	{
+		if ([[self delegate] respondsToSelector:@selector(moveTableView:targetIndexPathForMoveFromRowAtIndexPath:toProposedIndexPath:)]) 
+		{
+			NSIndexPath *proposedDestinationIndexPath = [[self delegate] moveTableView:self targetIndexPathForMoveFromRowAtIndexPath:[self movingIndexPath] toProposedIndexPath:newIndexPath];
+			
+			// If the delegate does not allow moving to the new index path cancel moving row
+			if ([newIndexPath compare:proposedDestinationIndexPath] != NSOrderedSame) {
+				return;
+			}
+		}
+		
 		[self beginUpdates];
 		
 		// Move the row
 		[self deleteRowsAtIndexPaths:[NSArray arrayWithObject:[self movingIndexPath]] withRowAnimation:UITableViewRowAnimationAutomatic];
         [self insertRowsAtIndexPaths:[NSArray arrayWithObject:newIndexPath] withRowAnimation:UITableViewRowAnimationAutomatic];
-		
-		// Inform the delegate to update it's model
-		if ([[self dataSource] respondsToSelector:@selector(moveTableView:moveRowFromIndexPath:toIndexPath:)]) {
-			[[self dataSource] moveTableView:self moveRowFromIndexPath:[self movingIndexPath] toIndexPath:newIndexPath];
-		}
 		
 		// Update the moving index path
 		[self setMovingIndexPath:newIndexPath];
@@ -204,8 +209,10 @@
 				[gestureRecognizer cancelTouch];
 				break;
 			}
-			
+
+			[self setInitialIndexPath:touchedIndexPath];
 			[self setMovingIndexPath:touchedIndexPath];
+
 			
 			// Get the touched cell and reset it's selection state
 			FMMoveTableViewCell *touchedCell = (FMMoveTableViewCell *)[self cellForRowAtIndexPath:touchedIndexPath];
@@ -297,9 +304,14 @@
 									 [[self snapShotImageView] removeFromSuperview];
 									 [self setSnapShotImageView:nil];
 									 
+									 if ([[self dataSource] respondsToSelector:@selector(moveTableView:moveRowFromIndexPath:toIndexPath:)]) {
+									 	[[self dataSource] moveTableView:self moveRowFromIndexPath:[self initialIndexPath] toIndexPath:[self movingIndexPath]];
+									 }
+									 
 									 // Reload row at moving index path to reset it's content
 									 NSIndexPath *movingIndexPath = [self movingIndexPath];
 									 [self setMovingIndexPath:nil];
+									 [self setInitialIndexPath:nil];
 									 [self reloadRowsAtIndexPaths:[NSArray arrayWithObject:movingIndexPath] withRowAnimation:UITableViewRowAnimationNone];
 								 }
 								 
@@ -320,6 +332,7 @@
 				
 				NSIndexPath *movingIndexPath = [self movingIndexPath];
 				[self setMovingIndexPath:nil];
+				[self setInitialIndexPath:nil];
 				[self reloadRowsAtIndexPaths:[NSArray arrayWithObject:movingIndexPath] withRowAnimation:UITableViewRowAnimationNone];
 			}
 			
