@@ -63,7 +63,6 @@ Contact
 
 I can't answer any questions about how to use the code, but I'd love to read any emails telling me that you're using it, creating an app with it, or just saying thanks.
 
-
 Take care. 
 Florian
 
