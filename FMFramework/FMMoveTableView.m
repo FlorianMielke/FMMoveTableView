@@ -162,9 +162,7 @@
 	// Analyze the new moving index path
 	// 1. It's a valid index path
 	// 2. It's not the current index path of the cell
-	if ([newIndexPath section] != NSNotFound && [newIndexPath row] != NSNotFound 
-		&& [newIndexPath compare:[self movingIndexPath]] != NSOrderedSame
-		) 
+	if ([newIndexPath section] != NSNotFound && [newIndexPath row] != NSNotFound && [newIndexPath compare:[self movingIndexPath]] != NSOrderedSame) 
 	{
 		if ([[self delegate] respondsToSelector:@selector(moveTableView:targetIndexPathForMoveFromRowAtIndexPath:toProposedIndexPath:)]) 
 		{
@@ -350,7 +348,10 @@
 {
     [self setAutoscrollDistance:0];
     
-    if (CGRectIntersectsRect([snapShot frame], [self bounds])) 
+	// Check for autoscrolling
+	// 1. The content size is bigger than the frame's
+	// 2. The snap shot is still inside the table view's bounds
+    if ([self frame].size.height < [self contentSize].height && CGRectIntersectsRect([snapShot frame], [self bounds])) 
 	{
 		CGPoint touchLocation = [[self movingGestureRecognizer] locationInView:self];
 		touchLocation.y += [self touchOffset].y;
@@ -403,10 +404,10 @@
     CGPoint contentOffset = [self contentOffset];
     contentOffset.y += [self autoscrollDistance];
     [self setContentOffset:contentOffset];
-    
+
 	// Move the snap shot appropriately
-    FMSnapShotImageView *snapShot = (FMSnapShotImageView *)[timer userInfo];
-    [snapShot moveByOffset:CGPointMake(0, [self autoscrollDistance])];
+	FMSnapShotImageView *snapShot = (FMSnapShotImageView *)[timer userInfo];
+	[snapShot moveByOffset:CGPointMake(0, [self autoscrollDistance])];
 	
 	// Even if we autoscroll we need to update the moved cell's index path
 	CGPoint touchLocation = [[self movingGestureRecognizer] locationInView:self];
