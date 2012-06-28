@@ -175,6 +175,11 @@
 		}
 		
 		[self beginUpdates];
+        
+        if ([self dataSource] && [[self dataSource] respondsToSelector:@selector(moveDataInDataSourceFromIndexPath:toIndexPath:)])
+        {
+            [[self dataSource] moveDataInDataSourceFromIndexPath:[self movingIndexPath] toIndexPath:newIndexPath];
+        }
 		
 		// Move the row
 		[self deleteRowsAtIndexPaths:[NSArray arrayWithObject:[self movingIndexPath]] withRowAnimation:UITableViewRowAnimationAutomatic];
