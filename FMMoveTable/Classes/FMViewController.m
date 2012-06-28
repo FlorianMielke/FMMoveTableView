@@ -83,6 +83,13 @@
 #pragma mark -
 #pragma mark Table view data source
 
+- (void)moveDataInDataSourceFromIndexPath:(NSIndexPath *)fromIndexPath toIndexPath:(NSIndexPath *)toIndexPath
+{
+    NSArray *movie = [[[self movies] objectAtIndex:[fromIndexPath section]] objectAtIndex:[fromIndexPath row]];
+	[[[self movies] objectAtIndex:[fromIndexPath section]] removeObjectAtIndex:[fromIndexPath row]];
+	[[[self movies] objectAtIndex:[toIndexPath section]] insertObject:movie atIndex:[toIndexPath row]];
+}
+
 - (void)moveTableView:(FMMoveTableView *)tableView moveRowFromIndexPath:(NSIndexPath *)fromIndexPath toIndexPath:(NSIndexPath *)toIndexPath
 {
 	NSArray *movie = [[[self movies] objectAtIndex:[fromIndexPath section]] objectAtIndex:[fromIndexPath row]];
