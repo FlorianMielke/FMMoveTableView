@@ -119,6 +119,7 @@
 - (void)setup
 {
 	UILongPressGestureRecognizer *movingGestureRecognizer = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(handleLongPress:)];
+	[movingGestureRecognizer setDelegate:self];
 	[self addGestureRecognizer:movingGestureRecognizer];
 	[self setMovingGestureRecognizer:movingGestureRecognizer];
 }
@@ -209,6 +210,27 @@
 
 #pragma mark -
 #pragma mark Handle long press
+
+- (BOOL)gestureRecognizerShouldBegin:(UIGestureRecognizer *)gestureRecognizer
+{
+	BOOL shouldBegin = YES;
+	
+	if ([gestureRecognizer isEqual:[self movingGestureRecognizer]])
+	{
+		// Ask the data source if we are allowed to move the touched row
+		if ([[self dataSource] respondsToSelector:@selector(moveTableView:canMoveRowAtIndexPath:)]) 
+		{
+			// Grap the touched index path
+			CGPoint touchPoint = [gestureRecognizer locationInView:self];
+			NSIndexPath *touchedIndexPath = [self indexPathForRowAtPoint:touchPoint];
+			
+			shouldBegin = [[self dataSource] moveTableView:self canMoveRowAtIndexPath:touchedIndexPath];
+		}
+	}
+	
+	return shouldBegin;
+}
+
 
 - (void)handleLongPress:(UILongPressGestureRecognizer *)gestureRecognizer
 {

@@ -113,6 +113,12 @@
 }
 
 
+- (BOOL)moveTableView:(FMMoveTableView *)tableView canMoveRowAtIndexPath:(NSIndexPath *)indexPath
+{
+	return YES;
+}
+
+
 - (void)moveTableView:(FMMoveTableView *)tableView moveRowFromIndexPath:(NSIndexPath *)fromIndexPath toIndexPath:(NSIndexPath *)toIndexPath
 {
 	NSArray *movie = [[[self movies] objectAtIndex:[fromIndexPath section]] objectAtIndex:[fromIndexPath row]];

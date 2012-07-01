@@ -7,6 +7,9 @@
 //  
 
 
+#import <QuartzCore/QuartzCore.h>
+
+
 @class FMMoveTableView;
 
 
@@ -28,6 +31,11 @@
 
 // Called after the particular row is being dropped to it's new index path
 - (void)moveTableView:(FMMoveTableView *)tableView moveRowFromIndexPath:(NSIndexPath *)fromIndexPath toIndexPath:(NSIndexPath *)toIndexPath;
+
+@optional
+
+// Allows to reorder a particular row
+- (BOOL)moveTableView:(FMMoveTableView *)tableView canMoveRowAtIndexPath:(NSIndexPath *)indexPath;
 
 @end
 
