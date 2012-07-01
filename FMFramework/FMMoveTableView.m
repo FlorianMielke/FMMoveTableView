@@ -68,7 +68,6 @@
 
 @interface FMMoveTableView ()
 
-@property (nonatomic, strong) NSIndexPath *initialIndexPath;
 @property (nonatomic, assign) CGPoint touchOffset;
 @property (nonatomic, strong) FMSnapShotImageView *snapShotImageView;
 @property (nonatomic, strong) UILongPressGestureRecognizer *movingGestureRecognizer;
@@ -102,7 +101,7 @@
 
 @dynamic dataSource;
 @dynamic delegate;
-@synthesize initialIndexPath = _initialIndexPath;
+@synthesize initialIndexPathForMovingRow = _initialIndexPathForMovingRow;
 @synthesize movingIndexPath = _movingIndexPath;
 @synthesize touchOffset = _touchOffset;
 @synthesize snapShotImageView = _snapShotImageView;
@@ -187,6 +186,26 @@
 }
 
 
+- (NSIndexPath *)adaptedIndexPathForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+	// Check for the need to adapting indexPath
+	// 1. There's a row in a moving state
+	// 2. indexPath is in the same section than moving row
+	// 3. indexPath comes after moving row
+	// 4. indexPath comes before initial row or is at initial row
+	if ([self movingIndexPath] 
+		&& [indexPath section] == [[self movingIndexPath] section]
+		&& [indexPath compare:[self movingIndexPath]] == NSOrderedDescending
+		&& [indexPath compare:[self initialIndexPathForMovingRow]] != NSOrderedDescending)
+	{
+		NSInteger newRow = [indexPath row] - 1;
+		indexPath = [NSIndexPath indexPathForRow:newRow inSection:[indexPath section]];
+	}
+	
+	return indexPath;
+}
+
+
 
 #pragma mark -
 #pragma mark Handle long press
@@ -208,7 +227,7 @@
 				break;
 			}
 
-			[self setInitialIndexPath:touchedIndexPath];
+			[self setInitialIndexPathForMovingRow:touchedIndexPath];
 			[self setMovingIndexPath:touchedIndexPath];
 
 			
@@ -302,14 +321,15 @@
 									 [[self snapShotImageView] removeFromSuperview];
 									 [self setSnapShotImageView:nil];
 									 
-									 if ([[self dataSource] respondsToSelector:@selector(moveTableView:moveRowFromIndexPath:toIndexPath:)]) {
-									 	[[self dataSource] moveTableView:self moveRowFromIndexPath:[self initialIndexPath] toIndexPath:[self movingIndexPath]];
+									 // Inform the data source about the new position if necessary
+									 if ([[self initialIndexPathForMovingRow] compare:[self movingIndexPath]] != NSOrderedSame) {
+										 [[self dataSource] moveTableView:self moveRowFromIndexPath:[self initialIndexPathForMovingRow] toIndexPath:[self movingIndexPath]];
 									 }
 									 
 									 // Reload row at moving index path to reset it's content
 									 NSIndexPath *movingIndexPath = [self movingIndexPath];
 									 [self setMovingIndexPath:nil];
-									 [self setInitialIndexPath:nil];
+									 [self setInitialIndexPathForMovingRow:nil];
 									 [self reloadRowsAtIndexPaths:[NSArray arrayWithObject:movingIndexPath] withRowAnimation:UITableViewRowAnimationNone];
 								 }
 								 
@@ -330,7 +350,7 @@
 				
 				NSIndexPath *movingIndexPath = [self movingIndexPath];
 				[self setMovingIndexPath:nil];
-				[self setInitialIndexPath:nil];
+				[self setInitialIndexPathForMovingRow:nil];
 				[self reloadRowsAtIndexPaths:[NSArray arrayWithObject:movingIndexPath] withRowAnimation:UITableViewRowAnimationNone];
 			}
 			
