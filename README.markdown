@@ -16,24 +16,13 @@ If you find it helpful, a Paypal donation would be very appreciated (donation [a
 How to use
 ----------
 
-1.	Add FMMoveTableView.(h/m) and FMMoveTableViewCell.(h/m) to your project
-2.	Change you UITableView subclass to be a subclass of *FMMoveTableView*
-3.	Change your UITableViewCell subclass to be a subclass of *FMMoveTableViewCell*
-4.	Update your UI(Table)ViewController to conform to *FMMoveTableViewDataSource* and (optional) *FMMoveTableViewDelegate*
-5.	Implement at least the delegate method `moveTableView:moveRowFromIndexPath:toIndexPath:` to update your model after a move
-6.	Implement a check in your table view data source `tableView:cellForRowAtIndexPath:` to prepare the appropriate row for it's move:
-
->
-
-	if ([tableView indexPathIsMovingIndexPath:indexPath]) 
-	{
-		[cell prepareForMove];
-	}
-	else 
-	{
-		// Configure your cell for normal use
-	}
-
+1.	Import the QuartzCore framework.
+2.	Add FMMoveTableView.(h/m) and FMMoveTableViewCell.(h/m) to your project
+3.	Change you UITableView subclass to be a subclass of *FMMoveTableView*
+4.	Change your UITableViewCell subclass to be a subclass of *FMMoveTableViewCell*
+5.	Update your UI(Table)ViewController to conform to *FMMoveTableViewDataSource* and (optional) *FMMoveTableViewDelegate*
+6.	Implement at least the delegate method `moveTableView:moveRowFromIndexPath:toIndexPath:` to update your model after a move
+7.	Implement some additional checked in your table view data source / delegate. Check the *FMMoveViewController* for further details
 
 Background
 ----------
@@ -43,6 +32,7 @@ Background
 Addopts the known UITableViewDataSource and UITableViewDelegate methods to check whether a row:
 
 * **Will move:** `moveTableView:willMoveRowAtIndexPath:`
+* **Can be moved:** `moveTableView:canMoveRowAtIndexPath:`
 * **Can move to an index path:** `moveTableView:targetIndexPathForMoveFromRowAtIndexPath:toProposedIndexPath:`
 * **Did move:** `moveTableView:moveRowFromIndexPath:toIndexPath:`
 
