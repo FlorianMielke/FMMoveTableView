@@ -159,6 +159,21 @@
 {
 	NSIndexPath *newIndexPath = [self indexPathForRowAtPoint:location];
 	
+    CGRect frameSection = [self rectForSection:[self movingIndexPath].section];
+    NSInteger numSections = [self numberOfSections];
+    if ((newIndexPath.section == 0) && (newIndexPath.row == 0))
+    {
+        if (((location.y < frameSection.origin.y) && (location.y >= 0)) && ([self movingIndexPath].section > 0))
+        {
+            newIndexPath = [NSIndexPath indexPathForRow:0 inSection:([self movingIndexPath].section - 1)];
+        }
+        else if ((location.y > (frameSection.origin.y + frameSection.size.height)) && ([self movingIndexPath].section < (numSections - 1)))
+        {
+            newIndexPath = [NSIndexPath indexPathForRow:0 inSection:([self movingIndexPath].section + 1)];
+        }
+        
+    }
+    
 	// Analyze the new moving index path
 	// 1. It's a valid index path
 	// 2. It's not the current index path of the cell
