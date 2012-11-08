@@ -349,7 +349,9 @@
 									 }
 									 
 									 // Reload row at moving index path to reset it's content
-									 NSIndexPath *movingIndexPath = [self movingIndexPath];
+									 
+                                                                         NSIndexPath *movingIndexPath = [NSIndexPath indexPathForRow:[self movingIndexPath].row
+                                                                                                                           inSection:[self movingIndexPath].section];
 									 [self setMovingIndexPath:nil];
 									 [self setInitialIndexPathForMovingRow:nil];
 									 [self reloadRowsAtIndexPaths:[NSArray arrayWithObject:movingIndexPath] withRowAnimation:UITableViewRowAnimationNone];
