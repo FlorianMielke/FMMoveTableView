@@ -24,8 +24,9 @@
 
 @synthesize movies = _movies;
 
-#define kRowNameOfMovie		0
-#define kRowYearOfMovie		1
+#define kIndexNameOfMovie		0
+#define kIndexYearOfMovie		1
+#define kIndexRowHeightOfMovie  2
 
 
 #pragma mark -
@@ -96,15 +97,15 @@
 		 * releases the moving row
 		 **********************************************************************/
 		if ([tableView movingIndexPath]) {
-			indexPath = [tableView adaptedIndexPathForRowAtIndexPath:indexPath];
+            indexPath = [tableView adaptedIndexPathForRowAtIndexPath:indexPath];
 		}
 		
 		
 		NSMutableArray *moviesOfSection = [[self movies] objectAtIndex:[indexPath section]];
 		NSArray *movie = [moviesOfSection objectAtIndex:[indexPath row]];
 		
-		[[cell textLabel] setText:[movie objectAtIndex:kRowNameOfMovie]];
-		[[cell detailTextLabel] setText:[movie objectAtIndex:kRowYearOfMovie]];
+		[[cell textLabel] setText:[movie objectAtIndex:kIndexNameOfMovie]];
+		[[cell detailTextLabel] setText:[movie objectAtIndex:kIndexYearOfMovie]];
 		[cell setShouldIndentWhileEditing:NO];
 		[cell setShowsReorderControl:NO];
 	}
@@ -132,6 +133,27 @@
 
 #pragma mark -
 #pragma mark Table view delegate
+
+- (CGFloat)tableView:(FMMoveTableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    #warning Implement this check in your table view delegate if necessary
+    /******************************** NOTE ********************************
+     * Implement this check in your table view delegate to ensure correct access to the row heights in 
+     * data source. 
+     *
+     * SKIP this check if all of your rows have the same heigt!
+     *
+     * The data source is in a dirty state when moving a row and is only being updated after the user
+     * releases the moving row
+     **********************************************************************/
+    indexPath = [tableView adaptedIndexPathForRowAtIndexPath:indexPath];
+	
+    NSArray *movie = [[[self movies] objectAtIndex:[indexPath section]] objectAtIndex:[indexPath row]];
+    CGFloat heightForRow = [[movie objectAtIndex:kIndexRowHeightOfMovie] floatValue];
+
+    return heightForRow;
+}
+
 
 - (NSIndexPath *)moveTableView:(FMMoveTableView *)tableView targetIndexPathForMoveFromRowAtIndexPath:(NSIndexPath *)sourceIndexPath toProposedIndexPath:(NSIndexPath *)proposedDestinationIndexPath
 {

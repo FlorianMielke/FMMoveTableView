@@ -4,46 +4,206 @@
 <dict>
 	<key>Movies</key>
 	<array>
-		<array><string>01. Brown of Harvard</string><string>1926</string></array>
-		<array><string>02. Bardelys the Magnificent</string><string>1926</string></array>
-		<array><string>03. The Great K and A Train Robbery</string><string>1926</string></array>
-		<array><string>04. Annie Laurie</string><string>1927</string></array>
-		<array><string>05. The Drop Kick (US title)</string><string>1927</string></array>
-		<array><string>06. Glitter (GB title)</string><string>1927</string></array>
-		<array><string>07. Mother Machree</string><string>1928</string></array>
-		<array><string>08. Four Sons</string><string>1928</string></array>
-		<array><string>09. Hangman's House</string><string>1928</string></array>
-		<array><string>10. Noah's Ark</string><string>1928</string></array>
-		<array><string>11. Speakeasy</string><string>1929</string></array>
-		<array><string>12. The Black Watch</string><string>1929</string></array>
-		<array><string>13. Words and Music</string><string>1929</string></array>
-		<array><string>14. Salute</string><string>1929</string></array>
-		<array><string>15. The Forward Pass</string><string>1929</string></array>
-		<array><string>16. Men Without Women</string><string>1930</string></array>
-		<array><string>17. Born Reckless</string><string>1930</string></array>
-		<array><string>18. Rough Romance</string><string>1930</string></array>
-		<array><string>19. Cheer Up and Smile</string><string>1930</string></array>
-		<array><string>20. The Big Trail</string><string>1930</string></array>
-		<array><string>21. Girls Demand Excitement</string><string>1931</string></array>
-		<array><string>22. Three Girls Lost</string><string>1931</string></array>
-		<array><string>23. Arizona[2] (US title)</string><string>1931</string></array>
-		<array><string>24. The Virtuous Wife (GB title)</string><string>1931</string></array>
-		<array><string>25. The Deceiver</string><string>1931</string></array>
-		<array><string>26. Range Feud</string><string>1931</string></array>
-		<array><string>27. Maker of Men</string><string>1931</string></array>
-		<array><string>28. The Voice of Hollywood No. 13</string><string>1932</string></array>
-		<array><string>29. Running Hollywood</string><string>1932</string></array>
-		<array><string>30. The Shadow of the Eagle</string><string>1932</string></array>
-		<array><string>31. Texas Cyclone</string><string>1932</string></array>
-		<array><string>32. Two-Fisted Law</string><string>1932</string></array>
-		<array><string>33. Lady and Gent</string><string>1932</string></array>
-		<array><string>34. The Hurricane Express</string><string>1932</string></array>
-		<array><string>35. The Hollywood Handicap</string><string>1932</string></array>
-		<array><string>36. Ride Him, Cowboy (US title)</string><string>1932</string></array>
-		<array><string>37. The Hawk (GB title)</string><string>1932</string></array>
-		<array><string>38. That's My Boy</string><string>1932</string></array>
-		<array><string>39. The Big Stampede</string><string>1932</string></array>
-		<array><string>40. Haunted Gold</string><string>1932</string></array>
+		<array>
+			<string>01. Brown of Harvard</string>
+			<string>1926</string>
+			<real>50</real>
+		</array>
+		<array>
+			<string>02. Bardelys the Magnificent</string>
+			<string>1926</string>
+			<integer>60</integer>
+		</array>
+		<array>
+			<string>03. The Great K and A Train Robbery</string>
+			<string>1926</string>
+			<integer>70</integer>
+		</array>
+		<array>
+			<string>04. Annie Laurie</string>
+			<string>1927</string>
+			<real>50</real>
+		</array>
+		<array>
+			<string>05. The Drop Kick (US title)</string>
+			<string>1927</string>
+			<real>60</real>
+		</array>
+		<array>
+			<string>06. Glitter (GB title)</string>
+			<string>1927</string>
+			<real>70</real>
+		</array>
+		<array>
+			<string>07. Mother Machree</string>
+			<string>1928</string>
+			<real>50</real>
+		</array>
+		<array>
+			<string>08. Four Sons</string>
+			<string>1928</string>
+			<real>60</real>
+		</array>
+		<array>
+			<string>09. Hangman&apos;s House</string>
+			<string>1928</string>
+			<real>70</real>
+		</array>
+		<array>
+			<string>10. Noah&apos;s Ark</string>
+			<string>1928</string>
+			<real>50</real>
+		</array>
+		<array>
+			<string>11. Speakeasy</string>
+			<string>1929</string>
+			<real>50</real>
+		</array>
+		<array>
+			<string>12. The Black Watch</string>
+			<string>1929</string>
+			<real>60</real>
+		</array>
+		<array>
+			<string>13. Words and Music</string>
+			<string>1929</string>
+			<real>70</real>
+		</array>
+		<array>
+			<string>14. Salute</string>
+			<string>1929</string>
+			<real>50</real>
+		</array>
+		<array>
+			<string>15. The Forward Pass</string>
+			<string>1929</string>
+			<real>60</real>
+		</array>
+		<array>
+			<string>16. Men Without Women</string>
+			<string>1930</string>
+			<real>70</real>
+		</array>
+		<array>
+			<string>17. Born Reckless</string>
+			<string>1930</string>
+			<real>50</real>
+		</array>
+		<array>
+			<string>18. Rough Romance</string>
+			<string>1930</string>
+			<real>60</real>
+		</array>
+		<array>
+			<string>19. Cheer Up and Smile</string>
+			<string>1930</string>
+			<real>70</real>
+		</array>
+		<array>
+			<string>20. The Big Trail</string>
+			<string>1930</string>
+			<real>50</real>
+		</array>
+		<array>
+			<string>21. Girls Demand Excitement</string>
+			<string>1931</string>
+			<real>60</real>
+		</array>
+		<array>
+			<string>22. Three Girls Lost</string>
+			<string>1931</string>
+			<real>70</real>
+		</array>
+		<array>
+			<string>23. Arizona[2] (US title)</string>
+			<string>1931</string>
+			<real>50</real>
+		</array>
+		<array>
+			<string>24. The Virtuous Wife (GB title)</string>
+			<string>1931</string>
+			<real>60</real>
+		</array>
+		<array>
+			<string>25. The Deceiver</string>
+			<string>1931</string>
+			<real>70</real>
+		</array>
+		<array>
+			<string>26. Range Feud</string>
+			<string>1931</string>
+			<real>50</real>
+		</array>
+		<array>
+			<string>27. Maker of Men</string>
+			<string>1931</string>
+			<real>60</real>
+		</array>
+		<array>
+			<string>28. The Voice of Hollywood No. 13</string>
+			<string>1932</string>
+			<real>70</real>
+		</array>
+		<array>
+			<string>29. Running Hollywood</string>
+			<string>1932</string>
+			<real>50</real>
+		</array>
+		<array>
+			<string>30. The Shadow of the Eagle</string>
+			<string>1932</string>
+			<real>60</real>
+		</array>
+		<array>
+			<string>31. Texas Cyclone</string>
+			<string>1932</string>
+			<real>70</real>
+		</array>
+		<array>
+			<string>32. Two-Fisted Law</string>
+			<string>1932</string>
+			<real>50</real>
+		</array>
+		<array>
+			<string>33. Lady and Gent</string>
+			<string>1932</string>
+			<real>60</real>
+		</array>
+		<array>
+			<string>34. The Hurricane Express</string>
+			<string>1932</string>
+			<real>70</real>
+		</array>
+		<array>
+			<string>35. The Hollywood Handicap</string>
+			<string>1932</string>
+			<real>50</real>
+		</array>
+		<array>
+			<string>36. Ride Him, Cowboy (US title)</string>
+			<string>1932</string>
+			<real>60</real>
+		</array>
+		<array>
+			<string>37. The Hawk (GB title)</string>
+			<string>1932</string>
+			<real>70</real>
+		</array>
+		<array>
+			<string>38. That&apos;s My Boy</string>
+			<string>1932</string>
+			<real>50</real>
+		</array>
+		<array>
+			<string>39. The Big Stampede</string>
+			<string>1932</string>
+			<real>60</real>
+		</array>
+		<array>
+			<string>40. Haunted Gold</string>
+			<string>1932</string>
+			<real>70</real>
+		</array>
 	</array>
 </dict>
 </plist>

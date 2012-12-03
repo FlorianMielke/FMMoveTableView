@@ -189,20 +189,59 @@
 
 - (NSIndexPath *)adaptedIndexPathForRowAtIndexPath:(NSIndexPath *)indexPath
 {
-	// Check for the need to adapting indexPath
-	// 1. There's a row in a moving state
-	// 2. indexPath is in the same section than moving row
-	// 3. indexPath comes after moving row
-	// 4. indexPath comes before initial row or is at initial row
-	if ([self movingIndexPath] 
-		&& [indexPath section] == [[self movingIndexPath] section]
-		&& [indexPath compare:[self movingIndexPath]] == NSOrderedDescending
-		&& [indexPath compare:[self initialIndexPathForMovingRow]] != NSOrderedDescending)
-	{
-		NSInteger newRow = [indexPath row] - 1;
-		indexPath = [NSIndexPath indexPathForRow:newRow inSection:[indexPath section]];
-	}
-	
+    // Skip further calulations
+    // 1. There's no row in a moving state
+    // 2. Index path is in a different section than the moving row
+    if (![self movingIndexPath]) {
+        return indexPath;
+    }
+    
+    CGFloat adaptedRow = NSNotFound;
+
+    // It's the moving row so return the initial index path
+    if ([indexPath compare:[self movingIndexPath]] == NSOrderedSame)
+    {
+        indexPath = [self initialIndexPathForMovingRow];
+    }
+    // Moving row is still in it's inital section
+    else if ([[self movingIndexPath] section] == [[self initialIndexPathForMovingRow] section])
+    {
+        // 1. Index path comes after initial row or is at initial row
+        // 2. Index path comes before moving row
+        if ([indexPath row] >= [[self initialIndexPathForMovingRow] row] && [indexPath row] < [[self movingIndexPath] row])
+        {
+            adaptedRow = [indexPath row] + 1;
+        }
+        // 1. Index path comes before initial row or is at initial row
+        // 2. Index path comes after moving row
+        else if ([indexPath row] <= [[self initialIndexPathForMovingRow] row] && [indexPath row] > [[self movingIndexPath] row])
+        {
+            adaptedRow = [indexPath row] - 1;
+        }
+    }
+    // Moving row is no longer in it's inital section
+    else if ([[self movingIndexPath] section] != [[self initialIndexPathForMovingRow] section])
+    {
+        // 1. Index path is in the moving rows initial section
+        // 2. Index path comes after initial row or is at initial row
+        if ([indexPath section] == [[self initialIndexPathForMovingRow] section] && [indexPath row] >= [[self initialIndexPathForMovingRow] row])
+        {
+            adaptedRow = [indexPath row] + 1;
+        }
+        // 1. Index path is in the moving rows current section
+        // 2. Index path comes before moving row
+        else if ([indexPath section] == [[self movingIndexPath] section] && [indexPath row] > [[self movingIndexPath] row])
+        {
+            adaptedRow = [indexPath row] - 1;
+        }
+    }
+
+    // We finally need to create an adapted index path
+    if (adaptedRow != NSNotFound)
+    {
+        indexPath = [NSIndexPath indexPathForRow:adaptedRow inSection:[indexPath section]];
+    }
+    
 	return indexPath;
 }
 
