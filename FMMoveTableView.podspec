@@ -9,4 +9,5 @@ Pod::Spec.new do |s|
   s.platform = :ios
   s.source_files = 'FMFramework/*.{h,m}'
   s.frameworks   = 'QuartzCore'
+  s.requires_arc = true
 end
