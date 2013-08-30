@@ -14,9 +14,10 @@
 
 - (void)prepareForMove
 {
-	[[self textLabel] setText:@""];
-	[[self detailTextLabel] setText:@""];
-	[[self imageView] setImage:nil];
+	UIView *coverView = [[UIView alloc] initWithFrame:self.contentView.frame];
+	coverView.backgroundColor = [UIColor whiteColor];
+	
+	[self.contentView addSubview:coverView];
 }
 
 
