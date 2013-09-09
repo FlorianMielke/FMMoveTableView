@@ -158,6 +158,16 @@
 - (void)moveRowToLocation:(CGPoint)location 
 {
 	NSIndexPath *newIndexPath = [self indexPathForRowAtPoint:location];
+    
+    // Create newIndexPath for moving into empty section
+    if (newIndexPath == nil) {
+        for (int i = 0; i < self.numberOfSections; i++) {
+            CGRect sectionRect = [self rectForSection:i];
+            if (CGRectContainsPoint(sectionRect, location)) {
+                newIndexPath = [NSIndexPath indexPathForRow:0 inSection:i];
+            }
+        }
+    }
 	
 	// Analyze the new moving index path
 	// 1. It's a valid index path
