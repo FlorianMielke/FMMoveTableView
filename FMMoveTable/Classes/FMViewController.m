@@ -22,25 +22,31 @@
 
 @implementation FMViewController
 
-@synthesize movies = _movies;
+static NSString *sCellIdentifier;
 
 #define kIndexNameOfMovie		0
 #define kIndexYearOfMovie		1
 #define kIndexRowHeightOfMovie  2
 
 
-#pragma mark -
-#pragma mark Table view data source
++ (void)initialize
+{
+    sCellIdentifier = @"MoveCell";
+}
+
+
+
+#pragma mark - Table view data source
 
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
 {
-	return [[self movies] count];
+	return [self.movies count];
 }
 
 
 - (NSInteger)tableView:(FMMoveTableView *)tableView numberOfRowsInSection:(NSInteger)section
 {
-	NSInteger numberOfRows = [[[self movies] objectAtIndex:section] count];
+	NSInteger numberOfRows = [[self.movies objectAtIndex:section] count];
 	
 	#warning Implement this check in your table data source
 	/******************************** NOTE ********************************
@@ -52,12 +58,12 @@
 	
 	// 1. A row is in a moving state
 	// 2. The moving row is not in it's initial section
-	if ([tableView movingIndexPath] && [[tableView movingIndexPath] section] != [[tableView initialIndexPathForMovingRow] section])
+	if (tableView.movingIndexPath && tableView.movingIndexPath.section != tableView.initialIndexPathForMovingRow.section)
 	{
-		if (section == [[tableView movingIndexPath] section]) {
+		if (section == tableView.movingIndexPath.section) {
 			numberOfRows++;
 		}
-		else if (section == [[tableView initialIndexPathForMovingRow] section]) {
+		else if (section == tableView.initialIndexPathForMovingRow.section) {
 			numberOfRows--;
 		}
 	}
@@ -74,8 +80,7 @@
 
 - (UITableViewCell *)tableView:(FMMoveTableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
 {
-	static NSString *cellIdentifier = @"MoveCell";
-	FMMoveTableViewCell *cell = (FMMoveTableViewCell *)[tableView dequeueReusableCellWithIdentifier:cellIdentifier];
+	FMMoveTableViewCell *cell = (FMMoveTableViewCell *)[tableView dequeueReusableCellWithIdentifier:sCellIdentifier];
 	
 
 	#warning Implement this check in your table view data source
@@ -96,18 +101,18 @@
 		 * The data source is in a dirty state when moving a row and is only being updated after the user 
 		 * releases the moving row
 		 **********************************************************************/
-		if ([tableView movingIndexPath]) {
+		if (tableView.movingIndexPath != nil) {
             indexPath = [tableView adaptedIndexPathForRowAtIndexPath:indexPath];
 		}
 		
 		
-		NSMutableArray *moviesOfSection = [[self movies] objectAtIndex:[indexPath section]];
-		NSArray *movie = [moviesOfSection objectAtIndex:[indexPath row]];
+		NSMutableArray *moviesInSection = [self.movies objectAtIndex:indexPath.section];
+		NSArray *movie = [moviesInSection objectAtIndex:indexPath.row];
 		
-		[[cell textLabel] setText:[movie objectAtIndex:kIndexNameOfMovie]];
-		[[cell detailTextLabel] setText:[movie objectAtIndex:kIndexYearOfMovie]];
-		[cell setShouldIndentWhileEditing:NO];
-		[cell setShowsReorderControl:NO];
+        cell.textLabel.text = [movie objectAtIndex:kIndexNameOfMovie];
+        cell.detailTextLabel.text = [movie objectAtIndex:kIndexYearOfMovie];
+        cell.shouldIndentWhileEditing = NO;
+        cell.showsReorderControl = NO;
 	}
 
 	return cell;
@@ -122,17 +127,16 @@
 
 - (void)moveTableView:(FMMoveTableView *)tableView moveRowFromIndexPath:(NSIndexPath *)fromIndexPath toIndexPath:(NSIndexPath *)toIndexPath
 {
-	NSArray *movie = [[[self movies] objectAtIndex:[fromIndexPath section]] objectAtIndex:[fromIndexPath row]];
-	[[[self movies] objectAtIndex:[fromIndexPath section]] removeObjectAtIndex:[fromIndexPath row]];
-	[[[self movies] objectAtIndex:[toIndexPath section]] insertObject:movie atIndex:[toIndexPath row]];
+	NSArray *movie = [[self.movies objectAtIndex:fromIndexPath.section] objectAtIndex:fromIndexPath.row];
+	[[self.movies objectAtIndex:fromIndexPath.section] removeObjectAtIndex:fromIndexPath.row];
+	[[self.movies objectAtIndex:toIndexPath.section] insertObject:movie atIndex:toIndexPath.row];
 	
 	DLog(@"Moved row from %@ to %@", fromIndexPath, toIndexPath);
 }
 
 
 
-#pragma mark -
-#pragma mark Table view delegate
+#pragma mark - Table view delegate
 
 - (CGFloat)tableView:(FMMoveTableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
 {
@@ -148,7 +152,7 @@
      **********************************************************************/
     indexPath = [tableView adaptedIndexPathForRowAtIndexPath:indexPath];
 	
-    NSArray *movie = [[[self movies] objectAtIndex:[indexPath section]] objectAtIndex:[indexPath row]];
+    NSArray *movie = [[self.movies objectAtIndex:indexPath.section] objectAtIndex:indexPath.row];
     CGFloat heightForRow = [[movie objectAtIndex:kIndexRowHeightOfMovie] floatValue];
 
     return heightForRow;
@@ -175,25 +179,25 @@
 
 
 
-#pragma mark -
-#pragma mark Accessor methods
+#pragma mark - Accessor methods
 
 - (NSMutableArray *)movies
 {
-	if (!_movies) 
-	{
-		NSString *path = [[NSBundle mainBundle] pathForResource:@"Movies" ofType:@"plist"];
-		NSDictionary *dict = [[NSDictionary alloc] initWithContentsOfFile:path];
-		
-		NSMutableArray *sampleData = [[dict valueForKey:@"Movies"] mutableCopy];
-		NSRange rangeOne = NSMakeRange(0, 15);
-		NSRange rangeTwo = NSMakeRange(15, 15);
-		
-		NSMutableArray *sectionOne = [[sampleData objectsAtIndexes:[NSIndexSet indexSetWithIndexesInRange:rangeOne]] mutableCopy];
-		NSMutableArray *sectionTwo = [[sampleData objectsAtIndexes:[NSIndexSet indexSetWithIndexesInRange:rangeTwo]] mutableCopy];
-		
-		_movies = [NSMutableArray arrayWithObjects:sectionOne, sectionTwo, nil];
-	}
+	if (_movies != nil) {
+        return _movies;
+    }
+
+    NSString *path = [[NSBundle mainBundle] pathForResource:@"Movies" ofType:@"plist"];
+    NSDictionary *dict = [[NSDictionary alloc] initWithContentsOfFile:path];
+    
+    NSMutableArray *sampleData = [[dict valueForKey:@"Movies"] mutableCopy];
+    NSRange rangeOne = NSMakeRange(0, 15);
+    NSRange rangeTwo = NSMakeRange(15, 15);
+    
+    NSMutableArray *sectionOne = [[sampleData objectsAtIndexes:[NSIndexSet indexSetWithIndexesInRange:rangeOne]] mutableCopy];
+    NSMutableArray *sectionTwo = [[sampleData objectsAtIndexes:[NSIndexSet indexSetWithIndexesInRange:rangeTwo]] mutableCopy];
+    
+    _movies = [NSMutableArray arrayWithObjects:sectionOne, sectionTwo, nil];
 	
 	return _movies;
 }
