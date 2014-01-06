@@ -1,0 +1,121 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Fmmovetableview by FlorianMielke</title>
+
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1>Fmmovetableview</h1>
+        <p>An iOS UITableView subclass that allows you to move rows without being in edit mode simply by tapping and holding the appropriate row.</p>
+
+        <p class="view"><a href="https://github.com/FlorianMielke/FMMoveTableView">View the Project on GitHub <small>FlorianMielke/FMMoveTableView</small></a></p>
+
+
+        <ul>
+          <li><a href="https://github.com/FlorianMielke/FMMoveTableView/zipball/master">Download <strong>ZIP File</strong></a></li>
+          <li><a href="https://github.com/FlorianMielke/FMMoveTableView/tarball/master">Download <strong>TAR Ball</strong></a></li>
+          <li><a href="https://github.com/FlorianMielke/FMMoveTableView">View On <strong>GitHub</strong></a></li>
+        </ul>
+      </header>
+      <section>
+        <h1>
+<a name="fmmovetable" class="anchor" href="#fmmovetable"><span class="octicon octicon-link"></span></a>FMMoveTable</h1>
+
+<p>FMMoveTable is an UITableView subclass that provides moving rows by simply tap and hold an appropriate row <em>without</em> switching the table to its edit mode.</p>
+
+<p><img src="http://madefm.com/media/blog/FMMoveTableViewSampleImage.png" alt=""></p>
+
+<h2>
+<a name="donations" class="anchor" href="#donations"><span class="octicon octicon-link"></span></a>Donations</h2>
+
+<p>I wrote FMMoveTable for use in one of my own apps and think that it could be quite useful (and very time-saving) for others. </p>
+
+<p>If you find it helpful, a Paypal donation would be very appreciated (donation [at] madeFM [dot] com).</p>
+
+<h2>
+<a name="how-to-use" class="anchor" href="#how-to-use"><span class="octicon octicon-link"></span></a>How to use</h2>
+
+<ol>
+<li> Import the QuartzCore framework.</li>
+<li> Add FMMoveTableView.(h/m) and FMMoveTableViewCell.(h/m) to your project</li>
+<li> Change you UITableView subclass to be a subclass of <em>FMMoveTableView</em>
+</li>
+<li> Change your UITableViewCell subclass to be a subclass of <em>FMMoveTableViewCell</em>
+</li>
+<li> Update your UI(Table)ViewController to conform to <em>FMMoveTableViewDataSource</em> and (optional) <em>FMMoveTableViewDelegate</em>
+</li>
+<li> Implement at least the delegate method <code>moveTableView:moveRowFromIndexPath:toIndexPath:</code> to update your model after a move</li>
+<li> Implement some additional checked in your table view data source / delegate. Check the <em>FMMoveViewController</em> for further details</li>
+</ol><h2>
+<a name="background" class="anchor" href="#background"><span class="octicon octicon-link"></span></a>Background</h2>
+
+<p><strong>FMMoveTableView</strong> </p>
+
+<p>Addopts the known UITableViewDataSource and UITableViewDelegate methods to check whether a row:</p>
+
+<ul>
+<li>
+<strong>Will move:</strong> <code>moveTableView:willMoveRowAtIndexPath:</code>
+</li>
+<li>
+<strong>Can be moved:</strong> <code>moveTableView:canMoveRowAtIndexPath:</code>
+</li>
+<li>
+<strong>Can move to an index path:</strong> <code>moveTableView:targetIndexPathForMoveFromRowAtIndexPath:toProposedIndexPath:</code>
+</li>
+<li>
+<strong>Did move:</strong> <code>moveTableView:moveRowFromIndexPath:toIndexPath:</code>
+</li>
+</ul><hr><p><strong>FMMoveTableViewCell</strong> </p>
+
+<p>Uses a method <code>prepareForMove</code> that you may need to overwrite if you use a custom subclass. </p>
+
+<p>In it's basic implementation it resets the <em>textLabel</em>, <em>detailTextLabel</em> and <em>imageView</em>.</p>
+
+<h2>
+<a name="contact" class="anchor" href="#contact"><span class="octicon octicon-link"></span></a>Contact</h2>
+
+<p>I can't answer any questions about how to use the code, but I'd love to read any emails telling me that you're using it, creating an app with it, or just saying thanks.</p>
+
+<p>Take care. 
+Florian</p>
+
+<p>Web: <a href="http://madeFM.com">http://blog.madeFM.com</a>
+Twitter: <a href="http://twitter.com/FlorianMielke">http://twitter.com/FlorianMielke</a></p>
+
+<h2>
+<a name="license-and-warranty" class="anchor" href="#license-and-warranty"><span class="octicon octicon-link"></span></a>License and Warranty</h2>
+
+<p>Available under the terms of a BSD-style open source license.</p>
+
+<p>Copyright © 2012, Florian Mielke. All rights reserved.</p>
+
+<p>This software is supplied to you by Florian Mielke in consideration of your agreement to the following terms, and your use, installation, modification or redistribution of this software constitutes acceptance of these terms. If you do not agree with these terms, please do not use, install, modify or redistribute this software.</p>
+
+<p>In consideration of your agreement to abide by the following terms, and subject to these terms, Florian Mielke grants you a personal, non-exclusive license, to use, reproduce, modify and redistribute the software, with or without modifications, in source and/or binary forms; provided that if you redistribute the software in its entirety and without modifications, you must retain this notice and the following text and disclaimers in all such redistributions of the software, and that in all cases attribution of Florian Mielke as the original author of the source code shall be included in all such resulting software products or distributions.</p>
+
+<p>Neither the name, trademarks, service marks or logos of Florian Mielke may be used to endorse or promote products derived from the software without specific prior written permission from Florian Mielke. Except as expressly stated in this notice, no other rights or licenses, express or implied, are granted by Florian Mielke herein, including but not limited to any patent rights that may be infringed by your derivative works or by other works in which the software may be incorporated.</p>
+
+<p>The software is provided by Florian Mielke on an "AS IS" basis. FLORIAN MIELKE MAKES NO WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION THE IMPLIED WARRANTIES OF NON-INFRINGEMENT, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE, REGARDING THE SOFTWARE OR ITS USE AND OPERATION ALONE OR IN COMBINATION WITH YOUR PRODUCTS.</p>
+
+<p>IN NO EVENT SHALL FLORIAN MIELKE BE LIABLE FOR ANY SPECIAL, INDIRECT, INCIDENTAL OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) ARISING IN ANY WAY OUT OF THE USE, REPRODUCTION, MODIFICATION AND/OR DISTRIBUTION OF THE SOFTWARE, HOWEVER CAUSED AND WHETHER UNDER THEORY OF CONTRACT, TORT (INCLUDING NEGLIGENCE), STRICT LIABILITY OR OTHERWISE, EVEN IF FLORIAN MIELKE HAVE BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.</p>
+      </section>
+      <footer>
+        <p>This project is maintained by <a href="https://github.com/FlorianMielke">FlorianMielke</a></p>
+        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
+      </footer>
+    </div>
+    <script src="javascripts/scale.fix.js"></script>
+    
+  </body>
+</html>
