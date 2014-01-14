@@ -11,32 +11,6 @@
 
 
 /**
- * When the long press gesture recognizer began, we create a snap shot of the touched
- * cell so the user thinks that he is moving the cell itself. Instead we clear out the
- * touched cell and just move snap shot.
- */
-@interface FMSnapShotView : UIImageView
-
-- (void)moveByOffset:(CGPoint)offset;
-
-@end
-
-
-@implementation FMSnapShotView
-
-- (void)moveByOffset:(CGPoint)offset
-{
-    CGRect frame = self.frame;
-    frame.origin.x += offset.x;
-    frame.origin.y += offset.y;
-    self.frame = frame;
-}
-
-@end
-
-
-
-/**
  * We need a little helper to cancel the current touch of the long press gesture recognizer
  * in the case the user does not tap on a row but on a section or table header
  */
@@ -61,7 +35,7 @@
 @interface FMMoveTableView ()
 
 @property (nonatomic, assign) CGPoint touchOffset;
-@property (nonatomic, strong) FMSnapShotView *snapShotOfMovingCell;
+@property (nonatomic, strong) UIView *snapShotOfMovingCell;
 @property (nonatomic, strong) UILongPressGestureRecognizer *movingGestureRecognizer;
 
 @property (nonatomic, strong) NSTimer *autoscrollTimer;
@@ -75,9 +49,9 @@
 /**
  * The autoscroll methods are based on Apple's sample code 'ScrollViewSuite'
  */
-@interface FMMoveTableView (AutoscrollingMethods)
+@interface FMMoveTableView (Autoscrolling)
 
-- (void)maybeAutoscrollForSnapShotImageView:(FMSnapShotView *)snapShot;
+- (void)maybeAutoscrollForSnapShot:(UIView *)snapShot;
 - (void)autoscrollTimerFired:(NSTimer *)timer;
 - (void)legalizeAutoscrollDistance;
 - (float)autoscrollDistanceForProximityToEdge:(float)proximity;
@@ -176,6 +150,7 @@
     }
     
     CGFloat adaptedRow = NSNotFound;
+    NSInteger movingRowOffset = 1;
 
     // It's the moving row so return the initial index path
     if ([indexPath compare:self.movingIndexPath] == NSOrderedSame)
@@ -189,13 +164,13 @@
         // 2. Index path comes before moving row
         if (indexPath.row >= self.initialIndexPathForMovingRow.row && indexPath.row < self.movingIndexPath.row)
         {
-            adaptedRow = indexPath.row + 1;
+            adaptedRow = indexPath.row + movingRowOffset;
         }
         // 1. Index path comes before initial row or is at initial row
         // 2. Index path comes after moving row
         else if (indexPath.row <= self.initialIndexPathForMovingRow.row && indexPath.row > self.movingIndexPath.row)
         {
-            adaptedRow = indexPath.row - 1;
+            adaptedRow = indexPath.row - movingRowOffset;
         }
     }
     // Moving row is no longer in it's inital section
@@ -205,13 +180,13 @@
         // 2. Index path comes after initial row or is at initial row
         if (indexPath.section == self.initialIndexPathForMovingRow.section && indexPath.row >= self.initialIndexPathForMovingRow.row)
         {
-            adaptedRow = indexPath.row + 1;
+            adaptedRow = indexPath.row + movingRowOffset;
         }
         // 1. Index path is in the moving rows current section
         // 2. Index path comes before moving row
         else if (indexPath.section == self.movingIndexPath.section && indexPath.row > self.movingIndexPath.row)
         {
-            adaptedRow = indexPath.row - 1;
+            adaptedRow = indexPath.row - movingRowOffset;
         }
     }
 
@@ -268,36 +243,7 @@
             self.initialIndexPathForMovingRow = touchedIndexPath;
             self.movingIndexPath = touchedIndexPath;
 			
-			// Get the touched cell and reset it's selection state
-			FMMoveTableViewCell *touchedCell = (FMMoveTableViewCell *)[self cellForRowAtIndexPath:touchedIndexPath];
-            touchedCell.selected = NO;
-            touchedCell.highlighted = NO;
-			
-			// Compute the touch offset from the cell's center
-			self.touchOffset = CGPointMake(touchedCell.center.x - touchPoint.x, touchedCell.center.y - touchPoint.y);
-
-			// Create a snap shot of the touched cell and store it
-			CGRect cellFrame = [touchedCell bounds];
-			
-			if ([[UIScreen mainScreen] scale] == 2.0) {
-				UIGraphicsBeginImageContextWithOptions(cellFrame.size, NO, 2.0);
-			} else {
-				UIGraphicsBeginImageContext(cellFrame.size);
-			}
-			
-			[touchedCell.layer renderInContext:UIGraphicsGetCurrentContext()];
-			UIImage *image = UIGraphicsGetImageFromCurrentImageContext();
-			UIGraphicsEndImageContext();
-			
-			FMSnapShotView *snapShotOfMovingCell = [[FMSnapShotView alloc] initWithImage:image];
-            snapShotOfMovingCell.frame = touchedCell.frame;
-			
-            self.snapShotOfMovingCell = snapShotOfMovingCell;
-			[self addSubview:self.snapShotOfMovingCell];
-			
-			
-			// Prepare the cell for moving (e.g. clear it's labels and imageView)
-			[touchedCell prepareForMove];
+            [self prepareSnapShotForRowAtIndexPath:touchedIndexPath touchPoint:touchPoint];
 			
 			// Inform the delegate about the beginning of the move
 			if ([self.delegate respondsToSelector:@selector(moveTableView:willMoveRowAtIndexPath:)]) {
@@ -305,8 +251,8 @@
 			}
 			
 			// Set a threshold for autoscrolling and reset the autoscroll distance
-			[self setAutoscrollThreshold:(CGRectGetHeight(self.snapShotOfMovingCell.frame) * 0.6)];
-			[self setAutoscrollDistance:0.0];
+            self.autoscrollThreshold = CGRectGetHeight(self.snapShotOfMovingCell.frame) * 0.6;
+            self.autoscrollDistance = 0.0;
 			
 			break;
 		}
@@ -320,7 +266,7 @@
 			self.snapShotOfMovingCell.center = CGPointMake(currentCenter.x, touchPoint.y + self.touchOffset.y);
 			
 			// Check if the table view has to scroll
-			[self maybeAutoscrollForSnapShotImageView:self.snapShotOfMovingCell];
+			[self maybeAutoscrollForSnapShot:self.snapShotOfMovingCell];
 			
 			// If the table view does not scroll, compute a new index path for the moving cell
 			if (self.autoscrollDistance == 0) {
@@ -372,53 +318,62 @@
 			
 		default:
 		{
-			// Do some cleanup if necessary
-			if (self.movingIndexPath != nil)
-			{
-				[self stopAutoscrolling];
-				
-				[self.snapShotOfMovingCell removeFromSuperview];
-                self.snapShotOfMovingCell = nil;
-				
-				NSIndexPath *movingIndexPath = self.movingIndexPath;
-                self.movingIndexPath = nil;
-                self.initialIndexPathForMovingRow = nil;
-                [self reloadRowsAtIndexPaths:@[movingIndexPath] withRowAnimation:UITableViewRowAnimationNone];
-			}
-			
+            [self resetToInitialStateIfNeeded];
 			break;
 		}
 	}
 }
 
 
+- (void)prepareSnapShotForRowAtIndexPath:(NSIndexPath *)touchedIndexPath touchPoint:(CGPoint)touchPoint
+{
+    // Get the touched cell and reset it's selection state
+    FMMoveTableViewCell *touchedCell = (FMMoveTableViewCell *)[self cellForRowAtIndexPath:touchedIndexPath];
+    touchedCell.selected = NO;
+    touchedCell.highlighted = NO;
+    
+    // Create a snap shot of the touched cell and prepare it
+    self.snapShotOfMovingCell = [touchedCell snapshotViewAfterScreenUpdates:YES];
+    self.snapShotOfMovingCell.frame = touchedCell.frame;
+    self.snapShotOfMovingCell.alpha = 0.95;
+    self.snapShotOfMovingCell.layer.shadowOpacity = 0.7;
+    self.snapShotOfMovingCell.layer.shadowRadius = 3.0;
+    self.snapShotOfMovingCell.layer.shadowOffset = CGSizeZero;
+    self.snapShotOfMovingCell.layer.shadowPath = [[UIBezierPath bezierPathWithRect:self.snapShotOfMovingCell.layer.bounds] CGPath];
+    
+    [self addSubview:self.snapShotOfMovingCell];
+    
+    // Prepare the cell for moving (e.g. clear it's labels and imageView)
+    [touchedCell prepareForMove];
+
+    // Compute the touch offset from the cell's center
+    self.touchOffset = CGPointMake(touchedCell.center.x - touchPoint.x, touchedCell.center.y - touchPoint.y);
+}
+
+
+- (void)resetToInitialStateIfNeeded
+{
+    if (self.movingIndexPath != nil)
+    {
+        [self stopAutoscrolling];
+        
+        [self.snapShotOfMovingCell removeFromSuperview];
+        self.snapShotOfMovingCell = nil;
+        
+        NSIndexPath *movingIndexPath = self.movingIndexPath;
+        self.movingIndexPath = nil;
+        self.initialIndexPathForMovingRow = nil;
+        [self reloadRowsAtIndexPaths:@[movingIndexPath] withRowAnimation:UITableViewRowAnimationNone];
+    }
+}
+
+
 
 #pragma mark - Autoscrolling
 
-- (void)maybeAutoscrollForSnapShotImageView:(FMSnapShotView *)snapShot
+- (void)maybeAutoscrollForSnapShot:(UIView *)snapShot
 {
-    self.autoscrollDistance = 0;
-    
-	// Check for autoscrolling
-	// 1. The content size is bigger than the frame's
-	// 2. The snap shot is still inside the table view's bounds
-    if (CGRectGetHeight(self.frame) < self.contentSize.height && CGRectIntersectsRect(snapShot.frame, self.bounds))
-	{
-		CGPoint touchLocation = [self.movingGestureRecognizer locationInView:self];
-		touchLocation.y += self.touchOffset.y;
-		
-        float distanceToTopEdge  = touchLocation.y - CGRectGetMinY(self.bounds);
-        float distanceToBottomEdge = CGRectGetMaxY(self.bounds) - touchLocation.y;
-		
-        if (distanceToTopEdge < self.autoscrollThreshold)
-		{
-            self.autoscrollDistance = [self autoscrollDistanceForProximityToEdge:distanceToTopEdge] * -1;
-        }
-		else if (distanceToBottomEdge < self.autoscrollThreshold)
-		{
-            self.autoscrollDistance =  [self autoscrollDistanceForProximityToEdge:distanceToBottomEdge];
-        }
-    }
+    [self determineAutoscrollDistanceForSnapShot:snapShot];
     
     if (self.autoscrollDistance == 0)
 	{
@@ -427,67 +382,84 @@
     } 
     else if (self.autoscrollTimer == nil)
 	{
-        self.autoscrollTimer = [NSTimer scheduledTimerWithTimeInterval:(1.0 / 60.0) target:self selector:@selector(autoscrollTimerFired:) userInfo:snapShot repeats:YES];
+        self.autoscrollTimer = [NSTimer scheduledTimerWithTimeInterval:(1.0 / 60.0) target:self selector:@selector(autoscrollTimerFired:) userInfo:nil repeats:YES];
     }
 }
 
 
-- (float)autoscrollDistanceForProximityToEdge:(float)proximity 
+- (void)determineAutoscrollDistanceForSnapShot:(UIView *)snapShot
+{
+    self.autoscrollDistance = 0;
+    
+	// Check for autoscrolling
+	// 1. The content size is bigger than the frame's
+	// 2. The snap shot is still inside the table view's bounds
+    if ([self canScroll] && CGRectIntersectsRect(snapShot.frame, self.bounds))
+	{
+		CGPoint touchLocation = [self.movingGestureRecognizer locationInView:self];
+		touchLocation.y += self.touchOffset.y;
+		
+        CGFloat distanceToTopEdge = touchLocation.y - CGRectGetMinY(self.bounds) - self.scrollIndicatorInsets.top;
+        CGFloat distanceToBottomEdge = CGRectGetMaxY(self.bounds) - self.scrollIndicatorInsets.bottom - touchLocation.y;
+        
+        if (distanceToTopEdge < self.autoscrollThreshold)
+		{
+            self.autoscrollDistance = [self autoscrollDistanceForProximityToEdge:distanceToTopEdge] * -1;
+        }
+		else if (distanceToBottomEdge < self.autoscrollThreshold)
+		{
+            self.autoscrollDistance = [self autoscrollDistanceForProximityToEdge:distanceToBottomEdge];
+        }
+    }
+}
+
+
+- (CGFloat)autoscrollDistanceForProximityToEdge:(CGFloat)proximity
 {
     return ceilf((self.autoscrollThreshold - proximity) / 5.0);
 }
 
 
-- (void)legalizeAutoscrollDistance 
-{
-    float minimumLegalDistance = self.contentOffset.y * -1;
-    float maximumLegalDistance = self.contentSize.height - (CGRectGetHeight(self.frame) + self.contentOffset.y);
-    self.autoscrollDistance = MAX(self.autoscrollDistance, minimumLegalDistance);
-    self.autoscrollDistance = MIN(self.autoscrollDistance, maximumLegalDistance);
-}
-
-
-- (void)autoscrollTimerFired:(NSTimer *)timer 
+- (void)autoscrollTimerFired:(NSTimer *)timer
 {
     [self legalizeAutoscrollDistance];
     
+    // Autoscroll table view
     CGPoint contentOffset = self.contentOffset;
     contentOffset.y += self.autoscrollDistance;
     self.contentOffset = contentOffset;
 
 	// Move the snap shot appropriately
-	FMSnapShotView *snapShot = (FMSnapShotView *)[timer userInfo];
-	[snapShot moveByOffset:CGPointMake(0, self.autoscrollDistance)];
+    CGRect frame = self.snapShotOfMovingCell.frame;
+    frame.origin.y += self.autoscrollDistance;
+    self.snapShotOfMovingCell.frame = frame;
 	
-	// Even if we autoscroll we need to update the moved cell's index path
+	// During autoscrolling we need to update the moved cell's index path
 	CGPoint touchLocation = [self.movingGestureRecognizer locationInView:self];
 	[self moveRowToLocation:touchLocation];
 }
 
 
+- (void)legalizeAutoscrollDistance
+{
+    CGFloat minimumLegalDistance = self.contentOffset.y * -1.0;
+    CGFloat maximumLegalDistance = self.contentSize.height - (CGRectGetHeight(self.frame) + self.contentOffset.y);
+    self.autoscrollDistance = MAX(self.autoscrollDistance, minimumLegalDistance);
+    self.autoscrollDistance = MIN(self.autoscrollDistance, maximumLegalDistance);
+}
+
+
 - (void)stopAutoscrolling
 {
-    self.autoscrollDistance = 0;
+    self.autoscrollDistance = 0.0;
 	[self.autoscrollTimer invalidate];
 	self.autoscrollTimer = nil;
 }
 
 
-
-#pragma mark - Accessor methods
-
-- (void)setSnapShotOfMovingCell:(FMSnapShotView *)snapShotOfMovingCell
+- (BOOL)canScroll
 {
-	if (snapShotOfMovingCell != nil)
-	{
-        snapShotOfMovingCell.alpha = 0.95;
-        snapShotOfMovingCell.layer.shadowOpacity = 0.7;
-        snapShotOfMovingCell.layer.shadowRadius = 3.0;
-        snapShotOfMovingCell.layer.shadowOffset = CGSizeZero;
-		snapShotOfMovingCell.layer.shadowPath = [[UIBezierPath bezierPathWithRect:snapShotOfMovingCell.layer.bounds] CGPath];
-	}
-	
-	_snapShotOfMovingCell = snapShotOfMovingCell;
+    return (CGRectGetHeight(self.frame) < self.contentSize.height);
 }
 
 
