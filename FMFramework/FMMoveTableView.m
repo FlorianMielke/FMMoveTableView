@@ -32,6 +32,7 @@
 @end
 
 
+
 @interface FMMoveTableView ()
 
 @property (nonatomic, assign) CGPoint touchOffset;
@@ -41,21 +42,6 @@
 @property (nonatomic, strong) NSTimer *autoscrollTimer;
 @property (nonatomic, assign) NSInteger autoscrollDistance;
 @property (nonatomic, assign) NSInteger autoscrollThreshold;
-
-@end
-
-
-
-/**
- * The autoscroll methods are based on Apple's sample code 'ScrollViewSuite'
- */
-@interface FMMoveTableView (Autoscrolling)
-
-- (void)maybeAutoscrollForSnapShot:(UIView *)snapShot;
-- (void)autoscrollTimerFired:(NSTimer *)timer;
-- (void)legalizeAutoscrollDistance;
-- (float)autoscrollDistanceForProximityToEdge:(float)proximity;
-- (void)stopAutoscrolling;
 
 @end
 
@@ -72,10 +58,9 @@
 
 - (void)prepareGestureRecognizer
 {
-	UILongPressGestureRecognizer *movingGestureRecognizer = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(handleLongPress:)];
-	[movingGestureRecognizer setDelegate:self];
-	[self addGestureRecognizer:movingGestureRecognizer];
-	[self setMovingGestureRecognizer:movingGestureRecognizer];
+	self.movingGestureRecognizer = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(handleLongPress:)];
+    self.movingGestureRecognizer.delegate = self;
+	[self addGestureRecognizer:self.movingGestureRecognizer];
 }
 
 
@@ -100,7 +85,175 @@
 
 
 
-#pragma mark - Helper methods
+#pragma mark - Handle gesture
+
+- (BOOL)gestureRecognizerShouldBegin:(UIGestureRecognizer *)gestureRecognizer
+{
+	BOOL shouldBegin = YES;
+	
+	if ([gestureRecognizer isEqual:self.movingGestureRecognizer])
+	{
+        CGPoint touchPoint = [gestureRecognizer locationInView:self];
+        NSIndexPath *touchedIndexPath = [self indexPathForRowAtPoint:touchPoint];
+        shouldBegin = [self isValidIndexPath:touchedIndexPath];
+
+		if (shouldBegin && [self.dataSource respondsToSelector:@selector(moveTableView:canMoveRowAtIndexPath:)]) {
+			shouldBegin = [self.dataSource moveTableView:self canMoveRowAtIndexPath:touchedIndexPath];
+		}
+	}
+	
+	return shouldBegin;
+}
+
+
+- (void)handleLongPress:(UILongPressGestureRecognizer *)gestureRecognizer
+{
+	switch (gestureRecognizer.state)
+	{
+		case UIGestureRecognizerStateBegan:
+		{
+			CGPoint touchPoint = [gestureRecognizer locationInView:self];
+            [self prepareForMovingRowAtTouchPoint:touchPoint];
+			
+			break;
+		}
+			
+		case UIGestureRecognizerStateChanged:
+		{
+			CGPoint touchPoint = [gestureRecognizer locationInView:self];
+            [self moveSnapShotToLocation:touchPoint];
+			[self maybeAutoscroll];
+			
+			if (![self isAutoscrolling]) {
+				[self moveRowToLocation:touchPoint];
+			}
+			
+			break;
+		}
+			
+		case UIGestureRecognizerStateEnded:
+		{
+            [self finishMovingRow];
+			break;
+		}
+			
+		default:
+		{
+            [self cancelMovingRowIfNeeded];
+			break;
+		}
+	}
+}
+
+
+- (void)prepareForMovingRowAtTouchPoint:(CGPoint)touchPoint
+{
+    NSIndexPath *touchedIndexPath = [self indexPathForRowAtPoint:touchPoint];
+    self.initialIndexPathForMovingRow = touchedIndexPath;
+    self.movingIndexPath = touchedIndexPath;
+
+    self.snapShotOfMovingCell = [self snapShotFromRowAtMovingIndexPath];
+    [self addSubview:self.snapShotOfMovingCell];
+
+    self.touchOffset = CGPointMake(self.snapShotOfMovingCell.center.x - touchPoint.x, self.snapShotOfMovingCell.center.y - touchPoint.y);
+    [self prepareAutoscrollForSnapShot];
+    
+    if ([self.delegate respondsToSelector:@selector(moveTableView:willMoveRowAtIndexPath:)]) {
+        [self.delegate moveTableView:self willMoveRowAtIndexPath:self.movingIndexPath];
+    }
+}
+
+
+- (void)finishMovingRow
+{
+    [self stopAutoscrolling];
+    
+    CGRect finalFrame = [self rectForRowAtIndexPath:self.movingIndexPath];
+    if (CGRectEqualToRect(finalFrame, CGRectZero)) {
+        return;
+    }
+    
+    [UIView animateWithDuration:0.2
+                     animations:^{
+                         
+                         self.snapShotOfMovingCell.frame = finalFrame;
+                         self.snapShotOfMovingCell.alpha = 1.0;
+                         
+                     }
+                     completion:^(BOOL finished) {
+                         
+                         if (finished)
+                         {
+                             [self resetSnapShot];
+                             
+                             if ([self.initialIndexPathForMovingRow compare:self.movingIndexPath] != NSOrderedSame) {
+                                 [self.dataSource moveTableView:self moveRowFromIndexPath:self.initialIndexPathForMovingRow toIndexPath:self.movingIndexPath];
+                             }
+                             
+                             [self resetMovingRow];
+                         }
+                         
+                     }];
+}
+
+
+- (void)cancelMovingRowIfNeeded
+{
+    if (self.movingIndexPath != nil)
+    {
+        [self stopAutoscrolling];
+        [self resetSnapShot];
+        [self resetMovingRow];
+    }
+}
+
+
+- (void)resetMovingRow
+{
+    NSIndexPath *movingIndexPath = [self.movingIndexPath copy];
+    self.movingIndexPath = nil;
+    self.initialIndexPathForMovingRow = nil;
+    [self reloadRowsAtIndexPaths:@[movingIndexPath] withRowAnimation:UITableViewRowAnimationNone];
+}
+
+
+- (void)moveRowToLocation:(CGPoint)location
+{
+	NSIndexPath *newIndexPath = [self indexPathForRowAtPoint:location];
+    if (![self canMoveToIndexPath:newIndexPath]) {
+        return;
+    }
+    
+    [self beginUpdates];
+    [self deleteRowsAtIndexPaths:@[self.movingIndexPath] withRowAnimation:UITableViewRowAnimationFade];
+    [self insertRowsAtIndexPaths:@[newIndexPath] withRowAnimation:UITableViewRowAnimationFade];
+    self.movingIndexPath = newIndexPath;
+    [self endUpdates];
+}
+
+
+- (BOOL)canMoveToIndexPath:(NSIndexPath *)indexPath
+{
+    if (![self isValidIndexPath:indexPath]) {
+        return NO;
+    }
+    
+    if ([indexPath compare:self.movingIndexPath] == NSOrderedSame) {
+        return NO;
+    }
+    
+    if ([self.delegate respondsToSelector:@selector(moveTableView:targetIndexPathForMoveFromRowAtIndexPath:toProposedIndexPath:)])
+    {
+        NSIndexPath *proposedDestinationIndexPath = [self.delegate moveTableView:self targetIndexPathForMoveFromRowAtIndexPath:self.movingIndexPath toProposedIndexPath:indexPath];
+        return ([indexPath compare:proposedDestinationIndexPath] == NSOrderedSame);
+    }
+    
+    return YES;
+}
+
+
+
+#pragma mark - Index path utilities
 
 - (BOOL)indexPathIsMovingIndexPath:(NSIndexPath *)indexPath
 {
@@ -108,50 +261,21 @@
 }
 
 
-- (void)moveRowToLocation:(CGPoint)location 
+- (BOOL)isValidIndexPath:(NSIndexPath *)indexPath
 {
-	NSIndexPath *newIndexPath = [self indexPathForRowAtPoint:location];
-	
-	// Analyze the new moving index path
-	// 1. It's a valid index path
-	// 2. It's not the current index path of the cell
-	if ([newIndexPath section] != NSNotFound && [newIndexPath row] != NSNotFound && [newIndexPath compare:self.movingIndexPath] != NSOrderedSame) 
-	{
-		if ([self.delegate respondsToSelector:@selector(moveTableView:targetIndexPathForMoveFromRowAtIndexPath:toProposedIndexPath:)]) 
-		{
-			NSIndexPath *proposedDestinationIndexPath = [self.delegate moveTableView:self targetIndexPathForMoveFromRowAtIndexPath:self.movingIndexPath toProposedIndexPath:newIndexPath];
-			
-			// If the delegate does not allow moving to the new index path cancel moving row
-			if ([newIndexPath compare:proposedDestinationIndexPath] != NSOrderedSame) {
-				return;
-			}
-		}
-		
-		[self beginUpdates];
-		
-		// Move the row
-		[self deleteRowsAtIndexPaths:@[self.movingIndexPath] withRowAnimation:UITableViewRowAnimationFade];
-        [self insertRowsAtIndexPaths:@[newIndexPath] withRowAnimation:UITableViewRowAnimationFade];
-		
-		// Update the moving index path
-        self.movingIndexPath = newIndexPath;
-		[self endUpdates];
-	}
+    return (indexPath != nil && indexPath.section != NSNotFound && indexPath.row != NSNotFound);
 }
 
 
 - (NSIndexPath *)adaptedIndexPathForRowAtIndexPath:(NSIndexPath *)indexPath
 {
-    // Skip further calulations
-    // 1. There's no row in a moving state
-    // 2. Index path is in a different section than the moving row
     if (self.movingIndexPath == nil) {
         return indexPath;
     }
     
     CGFloat adaptedRow = NSNotFound;
     NSInteger movingRowOffset = 1;
-
+    
     // It's the moving row so return the initial index path
     if ([indexPath compare:self.movingIndexPath] == NSOrderedSame)
     {
@@ -189,10 +313,9 @@
             adaptedRow = indexPath.row - movingRowOffset;
         }
     }
-
+    
     // We finally need to create an adapted index path
-    if (adaptedRow != NSNotFound)
-    {
+    if (adaptedRow != NSNotFound) {
         indexPath = [NSIndexPath indexPathForRow:adaptedRow inSection:indexPath.section];
     }
     
@@ -201,179 +324,55 @@
 
 
 
-#pragma mark - Handle long press
+#pragma mark - Snap shot
 
-- (BOOL)gestureRecognizerShouldBegin:(UIGestureRecognizer *)gestureRecognizer
+- (UIView *)snapShotFromRowAtMovingIndexPath
 {
-	BOOL shouldBegin = YES;
-	
-	if ([gestureRecognizer isEqual:self.movingGestureRecognizer])
-	{
-		// Ask the data source if we are allowed to move the touched row
-		if ([self.dataSource respondsToSelector:@selector(moveTableView:canMoveRowAtIndexPath:)]) 
-		{
-			// Grap the touched index path
-			CGPoint touchPoint = [gestureRecognizer locationInView:self];
-			NSIndexPath *touchedIndexPath = [self indexPathForRowAtPoint:touchPoint];
-			shouldBegin = [self.dataSource moveTableView:self canMoveRowAtIndexPath:touchedIndexPath];
-		}
-	}
-	
-	return shouldBegin;
-}
-
-
-- (void)handleLongPress:(UILongPressGestureRecognizer *)gestureRecognizer
-{
-	switch (gestureRecognizer.state)
-	{
-		case UIGestureRecognizerStateBegan:
-		{
-			CGPoint touchPoint = [gestureRecognizer locationInView:self];
-			
-			// Grap the touched index path
-			NSIndexPath *touchedIndexPath = [self indexPathForRowAtPoint:touchPoint];
-			
-			// Check for a valid index path, otherwise cancel the touch
-			if (touchedIndexPath == nil || touchedIndexPath.section == NSNotFound || touchedIndexPath.row == NSNotFound) {
-				[gestureRecognizer cancelTouch];
-				break;
-			}
-
-            self.initialIndexPathForMovingRow = touchedIndexPath;
-            self.movingIndexPath = touchedIndexPath;
-			
-            [self prepareSnapShotForRowAtIndexPath:touchedIndexPath touchPoint:touchPoint];
-			
-			// Inform the delegate about the beginning of the move
-			if ([self.delegate respondsToSelector:@selector(moveTableView:willMoveRowAtIndexPath:)]) {
-				[self.delegate moveTableView:self willMoveRowAtIndexPath:touchedIndexPath];
-			}
-			
-			// Set a threshold for autoscrolling and reset the autoscroll distance
-            self.autoscrollThreshold = CGRectGetHeight(self.snapShotOfMovingCell.frame) * 0.6;
-            self.autoscrollDistance = 0.0;
-			
-			break;
-		}
-			
-		case UIGestureRecognizerStateChanged:
-		{
-			CGPoint touchPoint = [gestureRecognizer locationInView:self];
-			
-			// Update the snap shot's position
-			CGPoint currentCenter = self.snapShotOfMovingCell.center;
-			self.snapShotOfMovingCell.center = CGPointMake(currentCenter.x, touchPoint.y + self.touchOffset.y);
-			
-			// Check if the table view has to scroll
-			[self maybeAutoscrollForSnapShot:self.snapShotOfMovingCell];
-			
-			// If the table view does not scroll, compute a new index path for the moving cell
-			if (self.autoscrollDistance == 0) {
-				[self moveRowToLocation:touchPoint];
-			}
-			
-			break;
-		}
-			
-		case UIGestureRecognizerStateEnded:
-		{
-			[self stopAutoscrolling];
-			
-			// Get to final index path
-			CGRect finalFrame = [self rectForRowAtIndexPath:self.movingIndexPath];
-			
-			// Place the snap shot to it's final position and fade it out
-			[UIView animateWithDuration:0.2
-							 animations:^{
-								 
-								 self.snapShotOfMovingCell.frame = finalFrame;
-								 self.snapShotOfMovingCell.alpha = 1.0;
-								 
-							 }
-							 completion:^(BOOL finished) {
-								 
-								 if (finished) 
-								 {
-									 // Clean up snap shot
-									 [self.snapShotOfMovingCell removeFromSuperview];
-                                     self.snapShotOfMovingCell = nil;
-									 
-									 // Inform the data source about the new position if necessary
-									 if ([self.initialIndexPathForMovingRow compare:self.movingIndexPath] != NSOrderedSame) {
-										 [self.dataSource moveTableView:self moveRowFromIndexPath:self.initialIndexPathForMovingRow toIndexPath:self.movingIndexPath];
-									 }
-									 
-									 // Reload row at moving index path to reset it's content
-									 NSIndexPath *movingIndexPath = [self.movingIndexPath copy];
-									 self.movingIndexPath = nil;
-                                     self.initialIndexPathForMovingRow = nil;
-									 [self reloadRowsAtIndexPaths:@[movingIndexPath] withRowAnimation:UITableViewRowAnimationNone];
-								 }
-								 
-							 }];			
-			
-			break;
-		}
-			
-		default:
-		{
-            [self resetToInitialStateIfNeeded];
-			break;
-		}
-	}
-}
-
-
-- (void)prepareSnapShotForRowAtIndexPath:(NSIndexPath *)touchedIndexPath touchPoint:(CGPoint)touchPoint
-{
-    // Get the touched cell and reset it's selection state
-    FMMoveTableViewCell *touchedCell = (FMMoveTableViewCell *)[self cellForRowAtIndexPath:touchedIndexPath];
+    FMMoveTableViewCell *touchedCell = (FMMoveTableViewCell *)[self cellForRowAtIndexPath:self.movingIndexPath];
     touchedCell.selected = NO;
     touchedCell.highlighted = NO;
-    
-    // Create a snap shot of the touched cell and prepare it
-    self.snapShotOfMovingCell = [touchedCell snapshotViewAfterScreenUpdates:YES];
-    self.snapShotOfMovingCell.frame = touchedCell.frame;
-    self.snapShotOfMovingCell.alpha = 0.95;
-    self.snapShotOfMovingCell.layer.shadowOpacity = 0.7;
-    self.snapShotOfMovingCell.layer.shadowRadius = 3.0;
-    self.snapShotOfMovingCell.layer.shadowOffset = CGSizeZero;
-    self.snapShotOfMovingCell.layer.shadowPath = [[UIBezierPath bezierPathWithRect:self.snapShotOfMovingCell.layer.bounds] CGPath];
-    
-    [self addSubview:self.snapShotOfMovingCell];
-    
-    // Prepare the cell for moving (e.g. clear it's labels and imageView)
-    [touchedCell prepareForMove];
 
-    // Compute the touch offset from the cell's center
-    self.touchOffset = CGPointMake(touchedCell.center.x - touchPoint.x, touchedCell.center.y - touchPoint.y);
+    UIView *snapShot = [touchedCell snapshotViewAfterScreenUpdates:YES];
+    snapShot.frame = touchedCell.frame;
+    snapShot.alpha = 0.95;
+    snapShot.layer.shadowOpacity = 0.7;
+    snapShot.layer.shadowRadius = 3.0;
+    snapShot.layer.shadowOffset = CGSizeZero;
+    snapShot.layer.shadowPath = [[UIBezierPath bezierPathWithRect:snapShot.layer.bounds] CGPath];
+
+    [touchedCell prepareForMove];
+    
+    return snapShot;
 }
 
 
-- (void)resetToInitialStateIfNeeded
+- (void)moveSnapShotToLocation:(CGPoint)touchPoint
 {
-    if (self.movingIndexPath != nil)
-    {
-        [self stopAutoscrolling];
-        
-        [self.snapShotOfMovingCell removeFromSuperview];
-        self.snapShotOfMovingCell = nil;
-        
-        NSIndexPath *movingIndexPath = self.movingIndexPath;
-        self.movingIndexPath = nil;
-        self.initialIndexPathForMovingRow = nil;
-        [self reloadRowsAtIndexPaths:@[movingIndexPath] withRowAnimation:UITableViewRowAnimationNone];
-    }
+    CGPoint currentCenter = self.snapShotOfMovingCell.center;
+    self.snapShotOfMovingCell.center = CGPointMake(currentCenter.x, touchPoint.y + self.touchOffset.y);
+}
+
+
+- (void)resetSnapShot
+{
+    [self.snapShotOfMovingCell removeFromSuperview];
+    self.snapShotOfMovingCell = nil;
 }
 
 
 
 #pragma mark - Autoscrolling
 
-- (void)maybeAutoscrollForSnapShot:(UIView *)snapShot
+- (void)prepareAutoscrollForSnapShot
 {
-    [self determineAutoscrollDistanceForSnapShot:snapShot];
+    self.autoscrollThreshold = CGRectGetHeight(self.snapShotOfMovingCell.frame) * 0.6;
+    self.autoscrollDistance = 0;
+}
+
+
+- (void)maybeAutoscroll
+{
+    [self determineAutoscrollDistanceForSnapShot];
     
     if (self.autoscrollDistance == 0)
 	{
@@ -387,21 +386,21 @@
 }
 
 
-- (void)determineAutoscrollDistanceForSnapShot:(UIView *)snapShot
+- (void)determineAutoscrollDistanceForSnapShot
 {
     self.autoscrollDistance = 0;
     
 	// Check for autoscrolling
 	// 1. The content size is bigger than the frame's
 	// 2. The snap shot is still inside the table view's bounds
-    if ([self canScroll] && CGRectIntersectsRect(snapShot.frame, self.bounds))
+    if ([self canScroll] && CGRectIntersectsRect(self.snapShotOfMovingCell.frame, self.bounds))
 	{
 		CGPoint touchLocation = [self.movingGestureRecognizer locationInView:self];
 		touchLocation.y += self.touchOffset.y;
-		
-        CGFloat distanceToTopEdge = touchLocation.y - CGRectGetMinY(self.bounds) - self.scrollIndicatorInsets.top;
-        CGFloat distanceToBottomEdge = CGRectGetMaxY(self.bounds) - self.scrollIndicatorInsets.bottom - touchLocation.y;
-        
+
+        CGFloat distanceToTopEdge = touchLocation.y - CGRectGetMinY(self.bounds);
+        CGFloat distanceToBottomEdge = CGRectGetMaxY(self.bounds) - touchLocation.y;
+
         if (distanceToTopEdge < self.autoscrollThreshold)
 		{
             self.autoscrollDistance = [self autoscrollDistanceForProximityToEdge:distanceToTopEdge] * -1;
@@ -424,17 +423,14 @@
 {
     [self legalizeAutoscrollDistance];
     
-    // Autoscroll table view
     CGPoint contentOffset = self.contentOffset;
     contentOffset.y += self.autoscrollDistance;
     self.contentOffset = contentOffset;
 
-	// Move the snap shot appropriately
     CGRect frame = self.snapShotOfMovingCell.frame;
     frame.origin.y += self.autoscrollDistance;
     self.snapShotOfMovingCell.frame = frame;
 	
-	// During autoscrolling we need to update the moved cell's index path
 	CGPoint touchLocation = [self.movingGestureRecognizer locationInView:self];
 	[self moveRowToLocation:touchLocation];
 }
@@ -457,10 +453,15 @@
 }
 
 
+- (BOOL)isAutoscrolling
+{
+    return (self.autoscrollDistance != 0);
+}
+
+
 - (BOOL)canScroll
 {
     return (CGRectGetHeight(self.frame) < self.contentSize.height);
 }
-
 
 @end
