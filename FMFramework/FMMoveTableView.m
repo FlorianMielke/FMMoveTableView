@@ -332,7 +332,18 @@
     touchedCell.selected = NO;
     touchedCell.highlighted = NO;
 
-    UIView *snapShot = [touchedCell snapshotViewAfterScreenUpdates:YES];
+    UIView *snapShot = nil;
+    if ([[[[UIDevice currentDevice] systemVersion] substringToIndex:1] intValue]>=7) {
+        snapShot = [touchedCell snapshotViewAfterScreenUpdates:YES];
+    }else{
+        snapShot = [[UIView alloc]initWithFrame:touchedCell.frame];
+        UIGraphicsBeginImageContextWithOptions(touchedCell.bounds.size, YES, 1);
+        [touchedCell.layer renderInContext:UIGraphicsGetCurrentContext()];
+        UIImage *viewImage = UIGraphicsGetImageFromCurrentImageContext();
+        UIGraphicsEndImageContext();
+        UIImageView *shot = [[UIImageView alloc]initWithImage:viewImage];
+        [snapShot addSubview:shot];
+    }
     snapShot.frame = touchedCell.frame;
     snapShot.alpha = 0.95;
     snapShot.layer.shadowOpacity = 0.7;
