@@ -44,6 +44,8 @@
 		176381251521BCBF00BF24A4 /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
 		176381271521BD8900BF24A4 /* Movies.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Movies.plist; path = FMMoveTable/Movies.plist; sourceTree = "<group>"; };
 		176381361521E5EC00BF24A4 /* README.markdown */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = README.markdown; sourceTree = SOURCE_ROOT; };
+		179BE5F219052F1C006D6CE2 /* FMMoveTableView.podspec */ = {isa = PBXFileReference; lastKnownFileType = text; path = FMMoveTableView.podspec; sourceTree = "<group>"; };
+		179BE5F319052F86006D6CE2 /* LICENSE */ = {isa = PBXFileReference; lastKnownFileType = text; path = LICENSE; sourceTree = "<group>"; };
 		17C3839617D3185F00AA4EEB /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = FMMoveTable/Images.xcassets; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -66,6 +68,9 @@
 			isa = PBXGroup;
 			children = (
 				176381361521E5EC00BF24A4 /* README.markdown */,
+				179BE5F219052F1C006D6CE2 /* FMMoveTableView.podspec */,
+				179BE5F319052F86006D6CE2 /* LICENSE */,
+				176381171521BA3F00BF24A4 /* FMFramework */,
 				1763813C1521E62800BF24A4 /* Classes */,
 				1763813D1521E7F400BF24A4 /* Resources */,
 				176381011521B9F000BF24A4 /* Supporting Files */,
@@ -114,6 +119,7 @@
 				176381211521BBF800BF24A4 /* FMMoveTableViewCell.m */,
 			);
 			name = FMFramework;
+			path = FMMoveTable;
 			sourceTree = "<group>";
 		};
 		176381241521BC0400BF24A4 /* Demo */ = {
@@ -132,7 +138,6 @@
 			isa = PBXGroup;
 			children = (
 				176381241521BC0400BF24A4 /* Demo */,
-				176381171521BA3F00BF24A4 /* FMFramework */,
 			);
 			name = Classes;
 			path = FMMoveTable;
@@ -175,7 +180,7 @@
 			isa = PBXProject;
 			attributes = {
 				CLASSPREFIX = FM;
-				LastUpgradeCheck = 0500;
+				LastUpgradeCheck = 0510;
 			};
 			buildConfigurationList = 176380F01521B9F000BF24A4 /* Build configuration list for PBXProject "FMMoveTable" */;
 			compatibilityVersion = "Xcode 3.2";
@@ -284,6 +289,7 @@
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNDECLARED_SELECTOR = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
@@ -312,6 +318,7 @@
 				COPY_PHASE_STRIP = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNDECLARED_SELECTOR = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
