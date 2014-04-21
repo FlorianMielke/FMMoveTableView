@@ -3,7 +3,7 @@ FMMoveTable
 
 `FMMoveTable` is an `UITableView` subclass that provides moving rows by simply tap and hold an appropriate row *without* switching the table to its edit mode.
 
-![](sample.gif)
+![](Sample.gif)
 
 Donations
 ---------
