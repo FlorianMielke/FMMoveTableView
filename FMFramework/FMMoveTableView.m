@@ -332,6 +332,8 @@
     touchedCell.selected = NO;
     touchedCell.highlighted = NO;
 
+    [touchedCell prepareForMoveSnapshot];
+    
     UIView *snapShot = [touchedCell snapshotViewAfterScreenUpdates:YES];
     snapShot.frame = touchedCell.frame;
     snapShot.alpha = 0.95;
