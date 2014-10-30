@@ -331,20 +331,28 @@
     FMMoveTableViewCell *touchedCell = (FMMoveTableViewCell *)[self cellForRowAtIndexPath:self.movingIndexPath];
     touchedCell.selected = NO;
     touchedCell.highlighted = NO;
-
-    UIView *snapShot = [touchedCell snapshotViewAfterScreenUpdates:YES];
+    
+    CGRect rect = touchedCell.frame;
+    UIGraphicsBeginImageContextWithOptions(rect.size, YES, 0.0f);
+    CGContextRef context = UIGraphicsGetCurrentContext();
+    [touchedCell.layer renderInContext:context];
+    UIImage *capturedScreen = UIGraphicsGetImageFromCurrentImageContext();
+    UIGraphicsEndImageContext();
+    
+    UIView *snapShot = [[UIView alloc] initWithFrame:touchedCell.frame];
+    UIColor *background = [[UIColor alloc] initWithPatternImage:capturedScreen];
+    snapShot.backgroundColor = background;
     snapShot.frame = touchedCell.frame;
     snapShot.alpha = 0.95;
     snapShot.layer.shadowOpacity = 0.7;
     snapShot.layer.shadowRadius = 3.0;
     snapShot.layer.shadowOffset = CGSizeZero;
     snapShot.layer.shadowPath = [[UIBezierPath bezierPathWithRect:snapShot.layer.bounds] CGPath];
-
+    
     [touchedCell prepareForMove];
     
     return snapShot;
 }
-
 
 - (void)moveSnapShotToLocation:(CGPoint)touchPoint
 {
