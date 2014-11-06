@@ -12,6 +12,12 @@
 @implementation FMMoveTableViewCell
 
 
+- (void)prepareForMoveSnapshot
+{
+    
+}
+
+
 - (void)prepareForMove
 {
     self.textLabel.text = @"";

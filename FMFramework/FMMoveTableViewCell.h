@@ -9,6 +9,7 @@
 
 @interface FMMoveTableViewCell : UITableViewCell
 
+- (void)prepareForMoveSnapshot;
 - (void)prepareForMove;
 
 @end
