@@ -14,7 +14,7 @@
 
 - (void)prepareForMoveSnapshot
 {
-    
+    // Should be implemented by subclasses if needed
 }
 
 
