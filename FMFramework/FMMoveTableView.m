@@ -328,11 +328,12 @@
 
 - (UIView *)snapshotFromRowAtMovingIndexPath
 {
-    FMMoveTableViewCell *touchedCell = (FMMoveTableViewCell *)[self cellForRowAtIndexPath:self.movingIndexPath];
+    UITableViewCell* touchedCell = [self cellForRowAtIndexPath:self.movingIndexPath];
+    id<FMMoveTableViewCell> touchedMoveCell = (id<FMMoveTableViewCell>)touchedCell;
     touchedCell.selected = NO;
     touchedCell.highlighted = NO;
 
-    [touchedCell prepareForMoveSnapshot];
+    [touchedMoveCell prepareForMoveSnapshot];
     
     UIView *snapshot = [touchedCell snapshotViewAfterScreenUpdates:YES];
     snapshot.frame = touchedCell.frame;
@@ -342,7 +343,7 @@
     snapshot.layer.shadowOffset = CGSizeZero;
     snapshot.layer.shadowPath = [[UIBezierPath bezierPathWithRect:snapshot.layer.bounds] CGPath];
 
-    [touchedCell prepareForMove];
+    [touchedMoveCell prepareForMove];
     
     return snapshot;
 }
