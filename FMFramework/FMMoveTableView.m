@@ -331,10 +331,18 @@
     FMMoveTableViewCell *touchedCell = (FMMoveTableViewCell *)[self cellForRowAtIndexPath:self.movingIndexPath];
     touchedCell.selected = NO;
     touchedCell.highlighted = NO;
-
+    
+    
+    //Create a snap shot as below and not as(image empty issue and snap shot warning was shown in iOS 8)
+        
+    UIGraphicsBeginImageContextWithOptions(touchedCell.bounds.size, NO, 0);
+    [touchedCell.layer renderInContext:UIGraphicsGetCurrentContext()];
+    UIImage *cellImage = UIGraphicsGetImageFromCurrentImageContext();
+    UIGraphicsEndImageContext();
+    
     [touchedCell prepareForMoveSnapshot];
     
-    UIView *snapshot = [touchedCell snapshotViewAfterScreenUpdates:YES];
+    UIView *snapshot =  [[UIImageView alloc] initWithImage:cellImage];
     snapshot.frame = touchedCell.frame;
     snapshot.alpha = 0.95;
     snapshot.layer.shadowOpacity = 0.7;
