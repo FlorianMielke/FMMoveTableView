@@ -1,3 +1,9 @@
+Discontinued
+------------
+
+iOS 11 introduced Drag & Drop capability for `UITableView` and `UICollectionView`. Please use that instead of `FMMoveTable`.
+
+
 FMMoveTable
 =======================
 
